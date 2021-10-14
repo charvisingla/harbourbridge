@@ -33,22 +33,11 @@ import (
 // srcTable and srcCols are the source table and columns respectively,
 // and vals contains string data to be converted to appropriate types
 // to send to Spanner. ProcessDataRow is only called in DataMode.
-func ProcessDataRow(conv *internal.Conv, srcTable string, srcCols []string, srcSchema schema.Table, spTable string, spCols []string, spSchema ddl.CreateTable, vals []string) {
-	spTable, cvtCols, cvtVals, err := ConvertData(conv, srcTable, srcCols, srcSchema, spTable, spCols, spSchema, vals)
-	if err != nil {
-		conv.Unexpected(fmt.Sprintf("Error while converting data: %s\n", err))
-		conv.StatsAddBadRow(srcTable, conv.DataMode())
-		conv.CollectBadRow(srcTable, srcCols, vals)
-	} else {
-		conv.WriteRow(srcTable, spTable, cvtCols, cvtVals)
-	}
-}
-
-// ConvertData maps the source DB data in vals into Spanner data,
+// It maps the source DB data in vals into Spanner data,
 // based on the Spanner and source DB schemas. Note that since entries
 // in vals may be empty, we also return the list of columns (empty
 // cols are dropped).
-func ConvertData(conv *internal.Conv, srcTable string, srcCols []string, srcSchema schema.Table, spTable string, spCols []string, spSchema ddl.CreateTable, vals []string) (string, []string, []interface{}, error) {
+func ProcessDataRow(conv *internal.Conv, srcTable string, srcCols []string, srcSchema schema.Table, spTable string, spCols []string, spSchema ddl.CreateTable, vals []string) (string, []string, []interface{}, error) {
 	var c []string
 	var v []interface{}
 	if len(spCols) != len(srcCols) || len(spCols) != len(vals) {

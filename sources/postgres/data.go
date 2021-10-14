@@ -34,22 +34,11 @@ import (
 // srcTable and srcCols are the source table and columns respectively,
 // and vals contains string data to be converted to appropriate types
 // to send to Spanner.  ProcessDataRow is only called in DataMode.
-func ProcessDataRow(conv *internal.Conv, srcTable string, srcCols, vals []string) {
-	spTable, spCols, spVals, err := ConvertData(conv, srcTable, srcCols, vals)
-	if err != nil {
-		conv.Unexpected(fmt.Sprintf("Error while converting data: %s\n", err))
-		conv.StatsAddBadRow(srcTable, conv.DataMode())
-		conv.CollectBadRow(srcTable, srcCols, vals)
-	} else {
-		conv.WriteRow(srcTable, spTable, spCols, spVals)
-	}
-}
-
-// ConvertData maps the source DB data in vals into Spanner data,
+// It maps the source DB data in vals into Spanner data,
 // based on the Spanner and source DB schemas. Note that since entries
 // in vals may be empty, we also return the list of columns (empty
 // cols are dropped).
-func ConvertData(conv *internal.Conv, srcTable string, srcCols []string, vals []string) (string, []string, []interface{}, error) {
+func ProcessDataRow(conv *internal.Conv, srcTable string, srcCols []string, vals []string) (string, []string, []interface{}, error) {
 	// Note: if there are many rows for the same srcTable/srcCols,
 	// then the following functionality will be (redundantly)
 	// repeated for every row converted. If this becomes a
