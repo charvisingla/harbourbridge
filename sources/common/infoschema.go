@@ -32,7 +32,7 @@ type InfoSchema interface {
 	GetConstraints(conv *internal.Conv, table SchemaAndName) ([]string, map[string][]string, error)
 	GetForeignKeys(conv *internal.Conv, table SchemaAndName) (foreignKeys []schema.ForeignKey, err error)
 	GetIndexes(conv *internal.Conv, table SchemaAndName) ([]schema.Index, error)
-	ProcessData(conv *internal.Conv, srcTable string, srcSchema schema.Table, spTable string, spCols []string, spSchema ddl.CreateTable)
+	ProcessData(conv *internal.Conv, srcTable string, srcSchema schema.Table, spTable string, spCols []string, spSchema ddl.CreateTable) error
 }
 
 type SchemaAndName struct {
@@ -81,7 +81,10 @@ func ProcessData(conv *internal.Conv, infoSchema InfoSchema) {
 				srcTable, err1, err2, ok))
 			continue
 		}
-		infoSchema.ProcessData(conv, srcTable, srcSchema, spTable, spCols, spSchema)
+		err := infoSchema.ProcessData(conv, srcTable, srcSchema, spTable, spCols, spSchema)
+		if err != nil {
+			return
+		}
 	}
 }
 
@@ -127,6 +130,7 @@ func processTable(conv *internal.Conv, table SchemaAndName, infoSchema InfoSchem
 	}
 	conv.SrcSchema[name] = schema.Table{
 		Name:        name,
+		Schema:      table.Schema,
 		ColNames:    colNames,
 		ColDefs:     colDefs,
 		PrimaryKeys: schemaPKeys,
